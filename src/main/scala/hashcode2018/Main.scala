@@ -79,9 +79,12 @@ object Main extends App {
     Greedy.go(input)
   }
 
-  writeOutput(doMagic(readInput("a_example")), "a_output")
-  writeOutput(doMagic(readInput("b_should_be_easy")), "b_output")
-  writeOutput(doMagic(readInput("c_no_hurry")), "c_output")
-  writeOutput(doMagic(readInput("d_metropolis")), "d_output")
-  writeOutput(doMagic(readInput("e_high_bonus")), "e_output")
+  val inputs = List("a_example", "b_should_be_easy", "c_no_hurry", "d_metropolis", "e_high_bonus")
+
+  inputs.foreach { input =>
+    val in = readInput(input)
+    val res = doMagic(in)
+    println(s"$input -> ${evaluate(in, res)}")
+    writeOutput(res, input + "_output")
+  }
 }

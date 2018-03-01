@@ -25,10 +25,11 @@ object Greedy {
       val lastT = ass.lastOption.map(_.time).getOrElse(0)
       val lastS = ass.lastOption.map(_.score).getOrElse(0)
       val pos = lastRide.map(ridesMap).map(_.to).getOrElse((0, 0))
-      val nextT = lastT + dist(pos, ride.from) + dist(ride.from, ride.to)
-      val nextS = lastS + dist(ride.from, ride.to) + (if ((lastT + dist(pos, ride.from)) == ride.minStart) bonus else 0)
+      val startT = math.max(lastT + dist(pos, ride.from), ride.minStart)
+      val nextT = startT + dist(ride.from, ride.to)
+      val nextS = lastS + dist(ride.from, ride.to) + (if (startT == ride.minStart) bonus else 0)
       val next = VehicleState(vId, ride.id, nextT, nextS)
-      if (next.time < ride.maxEnd)
+      if (next.time <= ride.maxEnd)
         Some(bestByTime(curr, next))
       else
         curr
