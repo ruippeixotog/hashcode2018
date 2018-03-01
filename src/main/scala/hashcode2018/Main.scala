@@ -18,6 +18,7 @@ object Main extends App {
     val rides = rideLines.map(_.split(" ").toList.map(_.toInt)).zipWithIndex.map {
       case (fromX :: fromY :: toX :: toY :: minStart :: maxEnd :: Nil, id) =>
         Ride(id, (fromX, fromY), (toX, toY), minStart, maxEnd)
+      case _ => throw new Exception("illegal input")
     }.toVector
 
     Input(vehicleCount, rides, bonus, maxSteps)
@@ -31,7 +32,50 @@ object Main extends App {
     bw.close()
   }
 
+  def dist(p1: (Int, Int), p2: (Int, Int)) = {
+    math.abs(p1._1 - p2._1) + math.abs(p1._2 - p2._2)
+  }
+
+  def evaluate(input: Input, output: Output): Long = {
+    evaluate(input, output, { (points, _, _, _) =>
+      println("this doesn't make sense!!!")
+      points
+    })
+  }
+
+  def evaluate(input: Input, output: Output, onDumbness: (Long, Int, (Int, Int), Ride) => Long): Long = {
+    output.vehicleAssigments.zipWithIndex.map { case (ass, i) =>
+      val vehiclePoints = ass.map(input.rides).foldLeft((0L, 0, (0, 0))) {
+        case ((points, t, xy), ride) =>
+          val rideDist = dist(ride.from, ride.to)
+          val rideStartT = t + dist(xy, ride.from)
+          val rideEndT = math.max(ride.minStart, rideStartT) + rideDist
+
+          // println(s"Vehicle $i: doing ride $ride")
+
+          val newPoints = if(rideStartT > ride.maxEnd - rideDist) {
+            onDumbness(points, t, xy, ride)
+          } else {
+            val bonus = if(rideStartT <= ride.minStart) input.bonus else 0
+            points + bonus + rideDist
+          }
+
+          // println(s"rideDist: $rideDist, rideStartT: $rideStartT, rideEndT: $rideEndT, points: $newPoints")
+          (newPoints, rideEndT, ride.to)
+      }._1
+
+      // println(s"Vehicle $i achieved $vehiclePoints points")
+      vehiclePoints
+
+    }.sum
+  }
+
   def doMagic(input: Input): Output = {
+    println(input)
+    println(evaluate(input, Output(Vector(
+      Vector(0),
+      Vector(2, 1)))))
+
     Greedy.go(input)
   }
 
