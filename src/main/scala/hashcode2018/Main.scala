@@ -71,10 +71,10 @@ object Main extends App {
   }
 
   def doMagic(input: Input): Output = {
-    println(input)
-    println(evaluate(input, Output(Vector(
+    //println(input)
+    /*println(evaluate(input, Output(Vector(
       Vector(0),
-      Vector(2, 1)))))
+      Vector(2, 1)))))*/
 
     Greedy.go(input)
   }
