@@ -1,5 +1,7 @@
 package hashcode2018
 
+import java.io.{BufferedWriter, File, FileWriter}
+
 import scala.io.Source
 
 case class Input(vehicleCount: Int, rides: Vector[Ride], bonus: Int, maxSteps: Int)
@@ -22,12 +24,15 @@ object Main extends App {
   }
 
   def writeOutput(output: Output): Unit = {
-    output.vehicleAssigments.map { ass => s"${ass.length} ${ass.mkString(" ")}" }.mkString("\n")
+    val res = output.vehicleAssigments.map { ass => s"${ass.length} ${ass.mkString(" ")}" }.mkString("\n") + "\n"
+    val file = new File("output")
+    val bw = new BufferedWriter(new FileWriter(file))
+    bw.write(res)
+    bw.close()
   }
 
   def doMagic(input: Input): Output = {
-    println(input)
-    Output(Vector.empty)
+    Greedy.go(input)
   }
 
   writeOutput(doMagic(readInput("a_example")))
