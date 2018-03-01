@@ -29,7 +29,7 @@ object Greedy {
       val nextS = lastS + dist(ride.from, ride.to) + (if ((lastT + dist(pos, ride.from)) == ride.minStart) bonus else 0)
       val next = VehicleState(vId, ride.id, nextT, nextS)
       if (next.time <= ride.maxEnd)
-        Some(bestByScore(curr, next))
+        Some(bestByTime(curr, next))
       else
         curr
     }
