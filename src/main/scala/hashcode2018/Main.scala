@@ -85,9 +85,9 @@ object Main extends App {
     val in = readInput(input)
     val res = doMagic(in)
 
-    val impossibleRides = in.rides.filter({ r => dist((0, 0), r.from) + dist(r.from, r.to) >= r.maxEnd }).map(_.id).toSet
+    val impossibleRides = in.rides.filter({ r => dist((0, 0), r.from) + dist(r.from, r.to) > r.maxEnd }).map(_.id).toSet
     val ridesAssigned = res.vehicleAssigments.flatten.toSet
-    val ridesToAssign = (((0 until in.rides.size).toSet -- ridesAssigned) -- impossibleRides)
+    val ridesToAssign = in.rides.indices.toSet -- ridesAssigned -- impossibleRides
 
     println("")
     println(s"$input -> ${evaluate(in, res)}")
