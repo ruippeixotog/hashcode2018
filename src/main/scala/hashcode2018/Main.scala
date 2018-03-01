@@ -84,7 +84,17 @@ object Main extends App {
   inputs.foreach { input =>
     val in = readInput(input)
     val res = doMagic(in)
+
+    val impossibleRides = in.rides.filter({ r => dist((0, 0), r.from) + dist(r.from, r.to) >= r.maxEnd }).map(_.id).toSet
+    val ridesAssigned = res.vehicleAssigments.flatten.toSet
+    val ridesToAssign = (((0 until in.rides.size).toSet -- ridesAssigned) -- impossibleRides)
+
+    println("")
     println(s"$input -> ${evaluate(in, res)}")
+    println(s"assigned   = ${ridesAssigned.size}")
+    println(s"impossible = ${impossibleRides.size}")
+    println(s"missing    = ${ridesToAssign.size}")
+
     writeOutput(res, input + "_output")
   }
 }
