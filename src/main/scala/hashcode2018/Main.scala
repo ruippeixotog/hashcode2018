@@ -24,9 +24,9 @@ object Main extends App {
     Input(vehicleCount, rides, bonus, maxSteps)
   }
 
-  def writeOutput(output: Output): Unit = {
+  def writeOutput(output: Output, outputFile: String): Unit = {
     val res = output.vehicleAssigments.map { ass => s"${ass.length} ${ass.mkString(" ")}" }.mkString("\n") + "\n"
-    val file = new File("output")
+    val file = new File(outputFile)
     val bw = new BufferedWriter(new FileWriter(file))
     bw.write(res)
     bw.close()
@@ -79,5 +79,9 @@ object Main extends App {
     Greedy.go(input)
   }
 
-  writeOutput(doMagic(readInput("a_example")))
+  writeOutput(doMagic(readInput("a_example")), "a_output")
+  writeOutput(doMagic(readInput("b_should_be_easy")), "b_output")
+  writeOutput(doMagic(readInput("c_no_hurry")), "c_output")
+  writeOutput(doMagic(readInput("d_metropolis")), "d_output")
+  writeOutput(doMagic(readInput("e_high_bonus")), "e_output")
 }
