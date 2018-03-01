@@ -5,7 +5,9 @@ import java.io.{BufferedWriter, File, FileWriter}
 import scala.io.Source
 
 case class Input(vehicleCount: Int, rides: Vector[Ride], bonus: Int, maxSteps: Int)
-case class Ride(id: Int, from: (Int, Int), to: (Int, Int), minStart: Int, maxEnd: Int)
+case class Ride(id: Int, from: (Int, Int), to: (Int, Int), minStart: Int, maxEnd: Int) {
+  val dist = Main.dist(from, to)
+}
 
 case class Output(vehicleAssigments: Vector[Vector[Int]])
 
@@ -38,45 +40,42 @@ object Main extends App {
 
   def evaluate(input: Input, output: Output): Long = {
     evaluate(input, output, { (points, _, _, _) =>
-      println("this doesn't make sense!!!")
+      // println("this doesn't make sense!!!")
       points
     })
   }
 
   def evaluate(input: Input, output: Output, onDumbness: (Long, Int, (Int, Int), Ride) => Long): Long = {
-    output.vehicleAssigments.zipWithIndex.map { case (ass, i) =>
-      val vehiclePoints = ass.map(input.rides).foldLeft((0L, 0, (0, 0))) {
-        case ((points, t, xy), ride) =>
-          val rideDist = dist(ride.from, ride.to)
-          val rideStartT = t + dist(xy, ride.from)
-          val rideEndT = math.max(ride.minStart, rideStartT) + rideDist
+    output.vehicleAssigments.map { ass => evaluate(input, ass, onDumbness) }.sum
+  }
 
-          // println(s"Vehicle $i: doing ride $ride")
+  def evaluate(input: Input, assignment: Seq[Int], onDumbness: (Long, Int, (Int, Int), Ride) => Long): Long = {
+    val vehiclePoints = assignment.map(input.rides).foldLeft((0L, 0, (0, 0))) {
+      case ((points, t, xy), ride) =>
+        val rideStartT = t + dist(xy, ride.from)
+        val rideEndT = math.max(ride.minStart, rideStartT) + ride.dist
 
-          val newPoints = if(rideStartT > ride.maxEnd - rideDist) {
-            onDumbness(points, t, xy, ride)
-          } else {
-            val bonus = if(rideStartT <= ride.minStart) input.bonus else 0
-            points + bonus + rideDist
-          }
+        // println(s"Vehicle $i: doing ride $ride")
 
-          // println(s"rideDist: $rideDist, rideStartT: $rideStartT, rideEndT: $rideEndT, points: $newPoints")
-          (newPoints, rideEndT, ride.to)
-      }._1
+        val newPoints = if(rideStartT > ride.maxEnd - ride.dist) {
+          onDumbness(points, t, xy, ride)
+        } else {
+          val bonus = if(rideStartT <= ride.minStart) input.bonus else 0
+          points + bonus + ride.dist
+        }
 
-      // println(s"Vehicle $i achieved $vehiclePoints points")
-      vehiclePoints
+        // println(s"rideDist: $rideDist, rideStartT: $rideStartT, rideEndT: $rideEndT, points: $newPoints")
+        (newPoints, rideEndT, ride.to)
+    }._1
 
-    }.sum
+    // println(s"Vehicle $i achieved $vehiclePoints points")
+    vehiclePoints
   }
 
   def doMagic(input: Input): Output = {
-    //println(input)
-    /*println(evaluate(input, Output(Vector(
-      Vector(0),
-      Vector(2, 1)))))*/
-
-    Greedy.go(input)
+    val initial = None // Some(Greedy.go(input))
+    val avgDist = input.rides.map(_.dist).sum.toDouble / input.rides.length
+    SimulatedAnnealing(input, initial).go(avgDist * 10.0, avgDist * 0.001, 60000)
   }
 
   val inputs = List("a_example", "b_should_be_easy", "c_no_hurry", "d_metropolis", "e_high_bonus")
