@@ -4,7 +4,9 @@ import java.io.{BufferedWriter, File, FileWriter}
 
 import scala.io.Source
 
-case class Input(vehicleCount: Int, rides: Vector[Ride], bonus: Int, maxSteps: Int)
+case class Input(vehicleCount: Int, rides: Vector[Ride], bonus: Int, maxSteps: Int) {
+  lazy val rideMap = rides.map(r => r.id -> r).toMap
+}
 case class Ride(id: Int, from: (Int, Int), to: (Int, Int), minStart: Int, maxEnd: Int) {
   val dist = Main.dist(from, to)
 }
@@ -73,9 +75,10 @@ object Main extends App {
   }
 
   def doMagic(input: Input): Output = {
-    val initial = None // Some(Greedy.go(input))
+    /*val initial = None // Some(Greedy.go(input))
     val avgDist = input.rides.map(_.dist).sum.toDouble / input.rides.length
-    SimulatedAnnealing(input, initial).go(avgDist * 10.0, avgDist * 0.001, 60000)
+    SimulatedAnnealing(input, initial).go(avgDist * 100.0, avgDist * 0.001, 100000)*/
+    Simulator.go(input)
   }
 
   val inputs = List("a_example", "b_should_be_easy", "c_no_hurry", "d_metropolis", "e_high_bonus")
