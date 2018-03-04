@@ -83,20 +83,26 @@ object Main extends App {
 
   val inputs = List("a_example", "b_should_be_easy", "c_no_hurry", "d_metropolis", "e_high_bonus")
 
-  inputs.foreach { input =>
+  val totalScore = inputs.map { input =>
     val in = readInput(input)
     val res = doMagic(in)
 
     val impossibleRides = in.rides.filter({ r => dist((0, 0), r.from) + dist(r.from, r.to) > r.maxEnd }).map(_.id).toSet
     val ridesAssigned = res.vehicleAssigments.flatten.toSet
     val ridesToAssign = in.rides.indices.toSet -- ridesAssigned -- impossibleRides
+    val score = evaluate(in, res)
 
     println("")
-    println(s"$input -> ${evaluate(in, res)}")
+    println(s"$input -> $score")
     println(s"assigned   = ${ridesAssigned.size}")
     println(s"impossible = ${impossibleRides.size}")
     println(s"missing    = ${ridesToAssign.size}")
 
     writeOutput(res, input + "_output")
-  }
+
+    score
+  }.sum
+
+  println("")
+  println(s"total score = $totalScore")
 }

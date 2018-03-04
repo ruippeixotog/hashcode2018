@@ -3,7 +3,7 @@ package hashcode2018
 import scala.collection.mutable
 
 object Simulator {
-  case class RideState(ride: Ride, score: Long, distTo: Long, timeTo: Long, inBonus: Boolean, totalDist: Long)
+  case class RideState(ride: Ride, score: Long, distTo: Long, timeTo: Long, inBonus: Boolean, totalDist: Long, nSkips: Int)
 
   def dist(from: (Int, Int), to: (Int, Int)): Int = math.abs(to._1 - from._1) + math.abs(to._2 - from._2)
 
@@ -12,46 +12,35 @@ object Simulator {
   case class Free(time: Int, vehicleId: Int) extends State
 
   sealed trait RiderType
-  case object LongDistanceRunner extends RiderType
-  case object BonusCatcher extends RiderType
   case object Regular extends RiderType
-  case object ShortDistanceRunner extends RiderType
+  case object FastFinisher extends RiderType
 
   def getBestRide(riderType: RiderType, availableRides: Vector[RideState]): Ride = {
     riderType match {
       case Regular =>
-        availableRides.minBy(_.timeTo).ride
-      case LongDistanceRunner =>
-        availableRides.maxBy(v => (v.totalDist, -v.timeTo)).ride
-      case BonusCatcher =>
+        val skips = availableRides.filter(_.nSkips > 100)
         val haveBonus = availableRides.filter(_.inBonus)
-        if (haveBonus.length > 0) {
-          haveBonus.minBy(_.timeTo).ride
-        } else
-          availableRides.minBy(_.timeTo).ride
-      case ShortDistanceRunner =>
-        availableRides.minBy(_.totalDist).ride
+        val ridesToConsider =
+          if (skips.length > 0) skips
+          else if (haveBonus.length > 0) haveBonus
+          else availableRides
+        ridesToConsider.minBy(v => (v.timeTo, -v.totalDist)).ride
+      case FastFinisher =>
+        val haveBonus = availableRides.filter(_.inBonus)
+        val ridesToConsider = if (haveBonus.length > 0) haveBonus else availableRides
+        ridesToConsider.minBy(v => (v.timeTo + v.totalDist)).ride
     }
   }
 
   def go(input: Input): Output = {
     var assignments = (0 until input.vehicleCount).map(_ => Vector[Int]()).toVector
     val positions = Array.fill(input.vehicleCount)((0, 0))
-    val vehicleTypes: Array[RiderType] = Array.fill(input.vehicleCount)(BonusCatcher)
+    val vehicleTypes: Array[RiderType] = Array.fill(input.vehicleCount)(Regular)
     val assignedRides = mutable.Set[Int]()
     val pq = mutable.PriorityQueue[State]()
     (0 until input.vehicleCount).foreach { i => pq.enqueue(Free(0, i)) }
 
-    /*if (input.vehicleCount >= 10) {
-      val distRunners = (0.1 * input.vehicleCount).toInt
-      val bonusCatchers = (0.1 * input.vehicleCount).toInt
-      val shortDistanceRunners = (0.1 * input.vehicleCount).toInt
-      (0 until distRunners).foreach { i => vehicleTypes(i) = LongDistanceRunner }
-      (distRunners until (distRunners + bonusCatchers)).foreach { i => vehicleTypes(i) = BonusCatcher }
-      ((distRunners + bonusCatchers) until (distRunners + bonusCatchers + shortDistanceRunners)).foreach {
-        i => vehicleTypes(i) = ShortDistanceRunner
-      }
-    }*/
+    val ridesSkip = mutable.Map[Int, Int]().withDefaultValue(0)
 
     while (pq.nonEmpty) {
       val event = pq.dequeue()
@@ -64,11 +53,15 @@ object Simulator {
               None
             else {
               val score = dist(ride.from, ride.to) + (if (startT == ride.minStart) input.bonus else 0)
-              Some(RideState(ride, score, dist(positions(vId), ride.from), startT, startT == ride.minStart, dist(ride.from, ride.to)))
+              Some(RideState(ride, score, dist(positions(vId), ride.from), startT, startT == ride.minStart, dist(ride.from, ride.to), ridesSkip(ride.id)))
             }
           }
           if (availableRides.length > 0) {
             val bestRide = getBestRide(vehicleTypes(vId), availableRides)
+            availableRides.foreach { r =>
+              ridesSkip(r.ride.id) = ridesSkip(r.ride.id) + 1
+            }
+            ridesSkip(bestRide.id) = ridesSkip(bestRide.id) - 1
             val nextT = math.max(t + dist(positions(vId), bestRide.from), bestRide.minStart) + dist(bestRide.from, bestRide.to)
             val nextPos = bestRide.to
             positions(vId) = nextPos
