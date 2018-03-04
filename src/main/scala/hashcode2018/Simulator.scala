@@ -18,7 +18,7 @@ object Simulator {
   def getBestRide(riderType: RiderType, availableRides: Vector[RideState]): Ride = {
     riderType match {
       case Regular =>
-        val skips = availableRides.filter(_.nSkips > 100)
+        val skips = availableRides.filter(_.nSkips > 50)
         val haveBonus = availableRides.filter(_.inBonus)
         val ridesToConsider =
           if (skips.length > 0) skips

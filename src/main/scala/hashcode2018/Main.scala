@@ -92,11 +92,14 @@ object Main extends App {
     val ridesToAssign = in.rides.indices.toSet -- ridesAssigned -- impossibleRides
     val score = evaluate(in, res)
 
+    val averageDistance = in.rides.map(r => dist(r.from, r.to)).sum / in.rides.length
+
     println("")
     println(s"$input -> $score")
     println(s"assigned   = ${ridesAssigned.size}")
     println(s"impossible = ${impossibleRides.size}")
     println(s"missing    = ${ridesToAssign.size}")
+    println(s"avg dist   = $averageDistance")
 
     writeOutput(res, input + "_output")
 
